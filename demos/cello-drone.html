@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="js/AudioContextMonkeyPatch.js"></script>
+  <script src="js/WAAOffset-latest.js"></script>
+  <script src="js/jquery-2.1.3.min.js"></script>
+  <script src="../dist/WAATableNode-latest.js"></script>
+  <script>
+    var req = new XMLHttpRequest()
+      , audioData, context
+      , tableNodes = []
+
+    req.open('GET', 'samples/195281__flcellogrl__5-cello-e2.wav', true)
+    req.responseType = 'arraybuffer'
+    req.onload = function () {
+      $('#startButton').fadeIn()
+      $('#loader').hide()
+      audioData = req.response
+    }
+    req.send(null)
+
+    $(function() {
+      $('#startButton').click(function() {
+        context = new AudioContext()
+        context.decodeAudioData(audioData, 
+          function(buffer) {
+            $('#startButton').fadeOut()
+            audioData = buffer
+            createLoop(0.5, 1)
+            createLoop(0.75, 1)
+            createLoop(1, 1)
+            createLoop(1.5, 1)
+          },
+          function(err) { alert('error decoding audio') }
+        )
+      })
+    })
+
+    var createLoop = function(playrate, gain) {
+      var tableNode, position, positionOffset
+        , outGain, positionOsc, positionFreq
+        , positionFreqMod
+
+      // Create the table node
+      outGain = context.createGain()
+      outGain.gain.setValueAtTime(0, 0)
+      outGain.gain.linearRampToValueAtTime(gain, 1) // 1 sec fade in
+      outGain.connect(context.destination)
+
+      tableNode = new WAATableNode(context)
+      tableNode.table = audioData
+      tableNode.connect(outGain)
+      tableNodes.push(tableNode)
+
+      // Create the control signal, which will control the playback position
+      // from the table. Here we simply use a triangle wave and scale it to the number
+      // of samples in the table, in order to read the sample back and forth.
+      position = context.createGain()
+      position.gain.value = audioData.length * 0.5
+      position.connect(tableNode.position)
+
+      positionOffset = new WAAOffset(context)
+      positionOffset.offset.value = 1
+      positionOffset.connect(position)
+
+      positionOsc = context.createOscillator()
+      positionOsc.connect(position)
+      positionOsc.frequency.value = 1 / audioData.duration * 0.5 * playrate // 0.5 because 1 period is twice the sound
+      positionOsc.type = 'triangle'
+      positionOsc.start(0)
+
+      // Slowly modulates the frequency of the triangle wave for slight variations in the playrate
+      positionFreq = context.createGain()
+      positionFreq.connect(positionOsc.frequency)
+      positionFreq.gain.value = positionOsc.frequency.value * 0.05 // 1% of the base frequency 
+      positionFreqMod = context.createOscillator()
+      positionFreqMod.connect(positionFreq)
+      positionFreqMod.frequency.value = 0.0001 + Math.random() * 0.0001
+      positionFreqMod.start(0) 
+    }
+  </script>
+  <style>
+    #startButton {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="description">A drone realized with a single sample of a cello. The sample is played back and forth at different play rates, which slowly vary themselves.</div>
+  <div id="loader">Loading</div>
+  <button id="startButton">Start</button>
+</body>
+</html>
