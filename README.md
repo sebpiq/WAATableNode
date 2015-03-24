@@ -12,32 +12,27 @@ var tableNode = new WAATableNode(context)
 positionNode.connect(tableNode.position)
 ```
 
-This might seem complicated at first, but in fact it is very simple, and extremely flexible. For example, if you want the table node to loop the sound at playrate 1, you can just use a sawtooth wave that oscillates between 0 and the sample length, and whose period is the same as the sample duration :
+This might seem complicated at first, but in fact it is very simple, and extremely flexible. For example, if you want the table node to loop the sound at playrate 1, you can just use a phasor that oscillates between 0 and the sample length, and whose period is the same as the sample duration :
 
 ```javascript
 var context = new AudioContext()
   , tableNode = new WAATableNode(context)
-  , offsetNode = new WAAOffset(context)
-  , positionNode = context.createGain()
-  , sawtoothNode = context.createOscillator()
+  , positionNode = context.createBufferSource(context)
 
 tableNode.table = aSound // can be an AudioBuffer or a Float32Array
-positionNode.connect(tableNode.position)
 tableNode.connect(context.destination)
 
-sawtoothNode.type = 'sawtooth'
-sawtoothNode.connect(positionNode)
-sawtoothNode.start(0)
+// The buffer will just contain a ramp that will be looped, essentially resulting
+// in a phasor [0, aSound.length] controlling the playback position.
+positionBuffer = context.createBuffer(1, aSound.length, context.sampleRate)
+for (var i = 0; i < aSound.length; i++) positionBuffer.getChannelData(0)[i] = i
 
-// Add an offset of 1, to bring back the sawtooth in the interval [0, 2]
-offsetNode.connect(positionNode)
-offsetNode.offset.value = 1
-
-// Scale the sawtooth to [0, aSound.length]
-positionNode.gain.value = aSound.length * 0.5
-
-// sets the period of the sawtooth to the duration of the sample
-sawtoothNode.frequency.value = 1 / aSound.duration
+positionNode.connect(tableNode.position)
+positionNode.buffer = positionBuffer
+positionNode.loop = true
+positionNode.start(0)
 ```
+
+See the complete example [here](http://sebpiq.github.io/WAATableNode/demos/simple.html)
 
 For a more complex example, you can [check this demo](http://sebpiq.github.io/WAATableNode/demos/cello-drone.html).

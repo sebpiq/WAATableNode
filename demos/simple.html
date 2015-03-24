@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="js/AudioContextMonkeyPatch.js"></script>
+  <script src="js/WAAOffset-latest.js"></script>
+  <script src="js/jquery-2.1.3.min.js"></script>
+  <script src="../dist/WAATableNode-latest.js"></script>
+  <script>
+    var req = new XMLHttpRequest()
+      , audioData, context
+      , tableNode, positionNode, positionBuffer
+
+    req.open('GET', 'samples/195281__flcellogrl__5-cello-e2.wav', true)
+    req.responseType = 'arraybuffer'
+    req.onload = function () {
+      $('#startButton').fadeIn()
+      $('#loader').hide()
+      audioData = req.response
+    }
+    req.send(null)
+
+    $(function() {
+      $('#startButton').click(function() {
+        context = new AudioContext()
+        context.decodeAudioData(audioData, 
+          function(buffer) {
+            $('#startButton').fadeOut()
+            audioData = buffer
+            tableNode = new WAATableNode(context)
+            positionNode = context.createBufferSource(context)
+
+            tableNode.table = audioData // can be an AudioBuffer or a Float32Array
+            tableNode.connect(context.destination)
+
+            // The buffer will just contain a ramp that will be looped, essentially resulting
+            // in a phasor [0, aSound.length]
+            positionBuffer = context.createBuffer(1, audioData.length, context.sampleRate)
+            for (var i = 0; i < audioData.length; i++) positionBuffer.getChannelData(0)[i] = i
+
+            positionNode.connect(tableNode.position)
+            positionNode.buffer = positionBuffer
+            positionNode.loop = true
+            positionNode.start(0)
+          },
+          function(err) { alert('error decoding audio') }
+        )
+      })
+    })
+
+    var createLoop = function(playrate, gain) {
+
+    }
+  </script>
+
+  <link href='http://fonts.googleapis.com/css?family=Quicksand' rel='stylesheet' type='text/css'>
+  <style>
+    body {
+      font-family: 'Quicksand', sans-serif;
+      text-align: center;
+      font-size: 25px;
+    }
+    #startButton {
+      display: none;
+      font-family: 'Quicksand', sans-serif;
+      border: none;
+      padding: 1em 2em;
+      font-size: 30px;
+      cursor: pointer;
+    }
+    #description {
+      margin-bottom: 2em;
+    }
+  </style>
+</head>
+<body>
+  <h1>WAATableNode demo</h1>
+  <div id="description">
+    <p>This is just <a href="samples/195281__flcellogrl__5-cello-e2.wav">a cello sample</a> being looped.</p>
+  </div>
+  <div id="loader">Loading</div>
+  <button id="startButton">Start</button>
+
+  <a href="https://github.com/sebpiq/WAATableNode"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/38ef81f8aca64bb9a64448d0d70f1308ef5341ab/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f6461726b626c75655f3132313632312e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"></a>
+</body>
+</html>
