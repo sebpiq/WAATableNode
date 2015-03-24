@@ -26,10 +26,14 @@
           function(buffer) {
             $('#startButton').fadeOut()
             audioData = buffer
-            createLoop(0.5, 1)
-            createLoop(0.75, 1)
+            //createLoop(0.5, 0.3)
+            //createLoop(0.75, 0.4)
             createLoop(1, 1)
-            createLoop(1.5, 1)
+            createLoop(1.5, 0.5)
+            createLoop(2, 0.4)
+            createLoop(4, 0.08)
+            createLoop(8, 0.035)
+            createLoop(9, 0.035)
           },
           function(err) { alert('error decoding audio') }
         )
@@ -72,22 +76,43 @@
       // Slowly modulates the frequency of the triangle wave for slight variations in the playrate
       positionFreq = context.createGain()
       positionFreq.connect(positionOsc.frequency)
-      positionFreq.gain.value = positionOsc.frequency.value * 0.05 // 1% of the base frequency 
+      positionFreq.gain.value = positionOsc.frequency.value * 0.005 // 1% of the base frequency 
       positionFreqMod = context.createOscillator()
       positionFreqMod.connect(positionFreq)
-      positionFreqMod.frequency.value = 0.0001 + Math.random() * 0.0001
+      positionFreqMod.frequency.value = 0.05 + Math.random() * 0.05
       positionFreqMod.start(0) 
     }
   </script>
+
+  <link href='http://fonts.googleapis.com/css?family=Quicksand' rel='stylesheet' type='text/css'>
   <style>
+    body {
+      font-family: 'Quicksand', sans-serif;
+      text-align: center;
+      font-size: 25px;
+    }
     #startButton {
       display: none;
+      font-family: 'Quicksand', sans-serif;
+      border: none;
+      padding: 1em 2em;
+      font-size: 30px;
+      cursor: pointer;
+    }
+    #description {
+      margin-bottom: 2em;
     }
   </style>
 </head>
 <body>
-  <div id="description">A drone realized with a single sample of a cello. The sample is played back and forth at different play rates, which slowly vary themselves.</div>
+  <h1>WAATableNode demo</h1>
+  <div id="description">
+    <p>A drone realized with a <a href="samples/195281__flcellogrl__5-cello-e2.wav">single sample of cello</a>.</p>
+    <p>This sample is played back and forth at different slowly varying play rates.</p>
+  </div>
   <div id="loader">Loading</div>
   <button id="startButton">Start</button>
+
+  <a href="https://github.com/sebpiq/WAATableNode"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/38ef81f8aca64bb9a64448d0d70f1308ef5341ab/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f6461726b626c75655f3132313632312e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"></a>
 </body>
 </html>
