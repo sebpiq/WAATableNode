@@ -26,14 +26,12 @@
           function(buffer) {
             $('#startButton').fadeOut()
             audioData = buffer
-            //createLoop(0.5, 0.3)
-            //createLoop(0.75, 0.4)
             createLoop(1, 1)
             createLoop(1.5, 0.5)
             createLoop(2, 0.4)
             createLoop(4, 0.08)
-            createLoop(8, 0.035)
-            createLoop(9, 0.035)
+            createLoop(8, 0.04)
+            createLoop(9, 0.04)
           },
           function(err) { alert('error decoding audio') }
         )
