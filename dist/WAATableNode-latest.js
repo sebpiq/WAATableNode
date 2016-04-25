@@ -3,7 +3,7 @@ var WAATableNode = require('./lib/WAATableNode')
 module.exports = WAATableNode
 if (typeof window !== 'undefined') window.WAATableNode = WAATableNode
 },{"./lib/WAATableNode":2}],2:[function(require,module,exports){
-var WAAOffset = require('waaoffset')
+var WAAOffset = require('waaoffsetnode')
 
 var WAATableNode = module.exports = function(context) {
   this.context = context
@@ -38,20 +38,30 @@ WAATableNode.prototype._setTable = function(table) {
   this._output.curve = table
   this.position.gain.setValueAtTime(2 / (table.length - 1), 0)
 }
-},{"waaoffset":3}],3:[function(require,module,exports){
-var WAAOffset = require('./lib/WAAOffset')
-module.exports = WAAOffset
-if (typeof window !== 'undefined') window.WAAOffset = WAAOffset
-},{"./lib/WAAOffset":4}],4:[function(require,module,exports){
-var WAAOffset = module.exports = function(context) {
+},{"waaoffsetnode":3}],3:[function(require,module,exports){
+var WAAOffsetNode = require('./lib/WAAOffsetNode')
+module.exports = WAAOffsetNode
+if (typeof window !== 'undefined') window.WAAOffsetNode = WAAOffsetNode
+},{"./lib/WAAOffsetNode":4}],4:[function(require,module,exports){
+var WAAOffsetNode = module.exports = function(context) {
   this.context = context
 
-  // Ones generator
-  this._ones = context.createOscillator()
-  this._ones.frequency.value = 0
-  this._ones.setPeriodicWave(context.createPeriodicWave(
-    new Float32Array([0, 1]), new Float32Array([0, 0])))
-  this._ones.start(0)
+  // Ones generator. We use only a single generator 
+  // for all WAAOfsetNodes in the same AudioContext
+  this._ones = WAAOffsetNode._ones.filter(function(ones) {
+    return ones.context === context
+  })[0]
+  if (this._ones) this._ones = this._ones.ones 
+  else {
+    var buffer = context.createBuffer(1, 1024, context.sampleRate)
+      , i, channelArray = buffer.getChannelData(0)
+    for (i = 0; i < buffer.length; i++) channelArray[i] = 1
+    this._ones = context.createBufferSource()
+    this._ones.buffer = buffer
+    this._ones.loop = true
+    this._ones.start(0)
+    WAAOffsetNode._ones.push({ context: context, ones: this._ones })
+  }
 
   // Multiplier
   this._output = context.createGain()
@@ -60,11 +70,13 @@ var WAAOffset = module.exports = function(context) {
   this.offset.value = 0
 }
 
-WAAOffset.prototype.connect = function() {
+WAAOffsetNode.prototype.connect = function() {
   this._output.connect.apply(this._output, arguments)
 }
 
-WAAOffset.prototype.disconnect = function() {
+WAAOffsetNode.prototype.disconnect = function() {
   this._output.disconnect.apply(this._output, arguments)
 }
+
+WAAOffsetNode._ones = []
 },{}]},{},[1]);

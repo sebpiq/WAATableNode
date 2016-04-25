@@ -1,6 +1,6 @@
 {
   "name": "waatablenode",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Web Audio node for reading a mono sample, and controlling the play position from an AudioParam",
   "main": "index.js",
   "scripts": {
