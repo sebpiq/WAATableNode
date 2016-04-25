@@ -25,7 +25,7 @@
   },
   "homepage": "https://github.com/sebpiq/WAATableNode",
   "dependencies": {
-    "waaoffset": "0.1.*"
+    "waaoffset": "^0.1.0"
   },
   "devDependencies": {
     "mocha": "2.0.x",
